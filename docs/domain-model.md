@@ -11,7 +11,7 @@
 | `MediaAsset` | Audio or image with source, license, and local cache state |
 | `Deck` | Named manual or dynamic collection |
 | `DeckMembership` | Many-to-many item membership with order and metadata |
-| `StudyMode` | Prompt channels, response channel, and evaluator policy |
+| `StudyMode` | Independent prompt channels, response channel, and derived evaluator policy |
 | `StudySession` | Immutable session configuration plus mutable progress state |
 | `SessionPrompt` | Selected item/skill pair, order, and selection reasons |
 | `Attempt` | Raw answer, timing, hints, evaluation, and override evidence |
@@ -45,6 +45,21 @@ Mastery keys should describe both stimulus and expected production. Initial keys
 - characters → spoken Mandarin.
 
 These can roll up into listening, reading, meaning, character production, pinyin/tone, and speaking summaries without discarding detail.
+
+## Prompt and response channels
+
+A study mode is composed rather than represented by a fixed card type:
+
+```text
+StudyMode
+  prompt channels: one or more presentation channels
+  response channel: one required learner-input channel
+  evaluator policy: selected for that prompt/response combination
+```
+
+A channel records both modality and representation. `audio + Mandarin speech` is different from `audio + English speech`; likewise, `text + simplified characters` is different from `text + pinyin`. This distinction allows audio-to-audio, image-to-speech, and other future combinations without ambiguous labels.
+
+Not every theoretical combination is valid. The study-mode catalog declares supported combinations and the evidence each contributes to mastery. Friendly named presets may reference these combinations later, but do not replace the underlying independent controls.
 
 ## Data rules
 

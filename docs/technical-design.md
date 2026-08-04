@@ -145,10 +145,16 @@ Phrase/sentence retrieval and generation with review, English semantic scoring, 
 
 Speech input, pronunciation feedback, offline packaging, sync contracts, and a mobile prototype.
 
-## 10. Decisions before implementation
+## 10. Confirmed implementation choices
 
-- Confirm stack or select alternatives.
+- Use React and TypeScript for the frontend.
+- Use Python and FastAPI for the backend.
+- Use SQLite as the local system of record.
+- Display simplified Chinese by default while preserving traditional forms.
+- Implement dictionary-assisted entry before generated content.
+
+## 11. Decisions still required
+
 - Select redistributable dictionary and example sources.
-- Choose simplified/traditional display defaults.
 - Choose initial local or cloud text-to-speech and speech-to-text providers.
-- Define the first five study modes and a calibrated evaluation test set.
+- Define a calibrated evaluation test set for the first five study modes.

@@ -55,6 +55,22 @@ A deck is an ordered or filtered collection of language items. Items can belong 
 
 A study mode pairs a prompt presentation with a required response and evaluation method.
 
+Prompt and response are configured independently. Each identifies both a modality and the language representation carried through that modality. For example, “Chinese audio” is an audio prompt carrying spoken Mandarin, while “spoken Mandarin” is a microphone response expected to produce Mandarin. Evaluation is selected from the resulting pair rather than exposed as a third everyday control.
+
+Initial prompt channels include:
+
+- simplified characters;
+- Chinese audio;
+- typed English meaning.
+
+Initial response channels include:
+
+- typed English meaning;
+- typed simplified characters;
+- typed pinyin.
+
+Later channels can add images, traditional characters, English audio, spoken Mandarin, handwriting, and constructed or selected responses without changing the basic model. Invalid or unevaluable pairs are disabled with a concise explanation.
+
 Examples:
 
 | Prompt | Required response | Evaluation |
@@ -102,6 +118,7 @@ If fewer eligible items exist than requested, the app clearly reports the availa
 - Allow the learner to override an incorrect automated judgment; preserve both the original score and override.
 - Save attempts, latency, hints, confidence, and scoring details.
 - Resume an interrupted local session.
+- Advance from feedback with an explicit Continue action rather than an automatic timer.
 
 ### 5.4 Adaptive selection and mastery
 
@@ -110,6 +127,7 @@ If fewer eligible items exist than requested, the app clearly reports the availa
 - Use spaced-repetition scheduling as the stable baseline.
 - Let the user explicitly request difficult items or a random/representative sample.
 - Explain selection with labels such as “due,” “weak listening,” or “frequently confused.”
+- Offer both immediate review of mistakes and normal spaced-repetition scheduling; an immediate retry remains recorded and does not erase the original attempt.
 
 ### 5.5 Context builder
 
@@ -201,8 +219,25 @@ Uncertain judgments should be surfaced as uncertain and allow self-assessment.
 
 ## 11. Open product decisions
 
-- Preferred Chinese variant at launch: simplified-first is assumed, with traditional stored alongside it.
 - Whether handwriting should enter the MVP after basic typed and spoken modes are proven.
 - Which dictionary/example corpora can be redistributed under acceptable licenses.
 - Whether initial speech recognition runs locally or uses an optional cloud provider.
 - How much manual control the learner wants over spaced-repetition parameters.
+
+## 12. Confirmed MVP decisions
+
+- The interface and initial content are simplified-Chinese-first; traditional forms remain supported in the data model.
+- The frontend uses React and TypeScript.
+- The backend uses Python and FastAPI.
+- SQLite provides local storage with no account required.
+- Dictionary-assisted entry precedes generated content features.
+- The deck library uses visual cards rather than a dense table in the initial interface.
+- Session configuration uses independent prompt and response controls.
+- Feedback waits for an explicit Continue action.
+- Session summaries offer immediate mistake review while also retaining spaced-repetition scheduling.
+- The first five study modes are:
+  1. characters to typed English;
+  2. Chinese audio to typed English;
+  3. English to typed simplified characters;
+  4. characters to typed pinyin;
+  5. Chinese audio to typed simplified characters.

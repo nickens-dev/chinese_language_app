@@ -1,3 +1,48 @@
-﻿# chinese_language_app
+# Chinese Language Study App
 
-Platypuses are unusual egg-laying mammals native to eastern Australia. With their duck-like bills, webbed feet, and electroreception, they are one of nature's most distinctive animals.
+A local-first, mobile-ready Chinese study application built around flexible language decks, configurable study sessions, and evidence-based mastery tracking.
+
+The defining workflow is simple: select one or more decks (or a subset), choose an exact session size, select the prompt and response formats, and receive structured feedback that improves future card selection.
+
+## Project status
+
+The project is currently in product definition, interface design, and initial scaffolding.
+
+- [Product specification](docs/product-spec.md)
+- [Technical design](docs/technical-design.md)
+- [Domain model](docs/domain-model.md)
+- [Low-fidelity wireframes](docs/wireframes.md)
+- [Architecture decisions](docs/decisions/README.md)
+- [Getting started](docs/getting-started.md)
+
+## Repository structure
+
+```text
+frontend/       React and TypeScript user interface
+backend/        Python and FastAPI application and learning rules
+docs/           Product, interface, architecture, and decision documents
+scripts/        Future development and setup automation
+```
+
+Each application directory contains a README describing its purpose, source map, commands, and boundaries. The first executable slice is a visual deck library backed by a local FastAPI and SQLite endpoint.
+
+## First development slice
+
+The initial implementation includes:
+
+- a responsive React deck-library screen;
+- multi-deck selection as the entry into a future session builder;
+- a FastAPI health endpoint and deck-summary endpoint;
+- automatic local SQLite schema creation;
+- three demonstration decks inserted only when the database is empty;
+- explicit loading, empty, and backend-unavailable interface states.
+
+See [Getting started](docs/getting-started.md) for prerequisites and commands.
+
+## Product principles
+
+1. The learner controls what and how much to study.
+2. Chinese knowledge is multi-modal: meaning, characters, pinyin, listening, and speaking are separate but connected skills.
+3. Successful reviews require an answer or other verifiable learner action.
+4. AI assists creation and evaluation; it does not hide why an answer or card was selected.
+5. Vocabulary should naturally grow into phrases, sentences, and real-world comprehension.

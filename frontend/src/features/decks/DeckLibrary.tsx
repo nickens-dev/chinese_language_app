@@ -1,24 +1,28 @@
 import { useMemo, useState } from "react";
 
 import { DeckCard } from "./DeckCard";
-import type { DeckSummary } from "./types";
+import { DeckCreateDialog } from "./DeckCreateDialog";
+import type { DeckInput, DeckSummary } from "./types";
 
 interface DeckLibraryProps {
   state:
     | { status: "loading"; decks: DeckSummary[] }
     | { status: "ready"; decks: DeckSummary[] }
     | { status: "error"; decks: DeckSummary[]; message: string };
+  onOpen: (deckId: string) => void;
+  onCreate: (values: DeckInput) => Promise<void>;
 }
 
-export function DeckLibrary({ state }: DeckLibraryProps) {
+export function DeckLibrary({ state, onOpen, onCreate }: DeckLibraryProps) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [creating, setCreating] = useState(false);
 
   const visibleDecks = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
     if (!normalizedQuery) return state.decks;
     return state.decks.filter((deck) =>
-      `${deck.name} ${deck.description}`.toLocaleLowerCase().includes(normalizedQuery),
+      (deck.name + " " + deck.description).toLocaleLowerCase().includes(normalizedQuery),
     );
   }, [query, state.decks]);
 
@@ -34,6 +38,11 @@ export function DeckLibrary({ state }: DeckLibraryProps) {
     });
   }
 
+  async function handleCreate(values: DeckInput) {
+    await onCreate(values);
+    setCreating(false);
+  }
+
   return (
     <section className="page" id="decks">
       <div className="page-heading">
@@ -42,7 +51,9 @@ export function DeckLibrary({ state }: DeckLibraryProps) {
           <h1>Language decks</h1>
           <p>Build vocabulary, then study it through any prompt and response combination.</p>
         </div>
-        <button className="primary-button" type="button"><span>＋</span> New deck</button>
+        <button className="primary-button" type="button" onClick={() => setCreating(true)}>
+          <span>＋</span> New deck
+        </button>
       </div>
 
       <div className="library-tools">
@@ -71,7 +82,10 @@ export function DeckLibrary({ state }: DeckLibraryProps) {
         </div>
       )}
       {state.status === "ready" && visibleDecks.length === 0 && (
-        <p className="notice">No decks match “{query}”.</p>
+        <div className="notice empty-library">
+          <strong>{query ? "No decks match your search." : "Your deck library is empty."}</strong>
+          <span>{query ? "Try a different search." : "Create a deck to start organizing vocabulary."}</span>
+        </div>
       )}
 
       <div className="deck-grid">
@@ -81,6 +95,7 @@ export function DeckLibrary({ state }: DeckLibraryProps) {
             deck={deck}
             selected={selected.has(deck.id)}
             onToggle={toggleDeck}
+            onOpen={onOpen}
           />
         ))}
       </div>
@@ -94,6 +109,8 @@ export function DeckLibrary({ state }: DeckLibraryProps) {
           </div>
         </div>
       )}
+
+      {creating && <DeckCreateDialog onClose={() => setCreating(false)} onCreate={handleCreate} />}
     </section>
   );
 }

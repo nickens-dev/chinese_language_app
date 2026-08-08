@@ -40,7 +40,7 @@ Open `http://localhost:5173`. Vite forwards requests beginning with `/api` to th
 
 ## What happens on first launch
 
-FastAPI creates `backend/data/chinese_study.db`. If the database contains no decks, it inserts three demonstration deck summaries so the first screen has realistic content. The database is local and ignored by Git.
+FastAPI creates `backend/data/chinese_study.db`. A new database starts with an empty deck library, and decks created through the interface are stored there. The database is local and ignored by Git.
 
 ## Validate the project
 

@@ -17,7 +17,7 @@ tests/          Unit, integration, contract, and simulation tests
 data/           Ignored local SQLite database files
 ```
 
-The first vertical slice exposes `GET /api/health` and `GET /api/decks`. Startup creates the SQLite schema and three clearly labeled demonstration decks when the database is empty.
+The current vertical slice exposes health and persistent deck CRUD endpoints. Startup creates the SQLite schema when needed and preserves the learner's existing decks; it does not insert sample content.
 
 ## Commands
 

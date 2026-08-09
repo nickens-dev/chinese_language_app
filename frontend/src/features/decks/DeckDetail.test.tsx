@@ -26,6 +26,7 @@ describe("DeckDetail", () => {
         onBack={vi.fn()}
         onUpdate={onUpdate}
         onArchive={vi.fn()}
+        onItemCountChange={vi.fn()}
       />,
     );
 
@@ -54,6 +55,7 @@ describe("DeckDetail", () => {
         onBack={vi.fn()}
         onUpdate={vi.fn()}
         onArchive={onArchive}
+        onItemCountChange={vi.fn()}
       />,
     );
 

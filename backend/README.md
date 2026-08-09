@@ -17,7 +17,7 @@ tests/          Unit, integration, contract, and simulation tests
 data/           Ignored local SQLite database files
 ```
 
-The current vertical slice exposes health and persistent deck CRUD endpoints. Startup creates the SQLite schema when needed and preserves the learner's existing decks; it does not insert sample content.
+The current vertical slice exposes health, persistent deck CRUD, and card-management endpoints. Startup creates the SQLite schema when needed and preserves the learner's existing decks; it does not insert sample content.
 
 ## Commands
 

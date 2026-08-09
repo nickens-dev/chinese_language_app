@@ -1,5 +1,6 @@
 import { useState, type FormEvent } from "react";
 
+import { DeckCards } from "../cards/DeckCards";
 import type { DeckAccent, DeckInput, DeckSummary } from "./types";
 
 interface DeckDetailProps {
@@ -7,9 +8,10 @@ interface DeckDetailProps {
   onBack: () => void;
   onUpdate: (deckId: string, values: Partial<DeckInput>) => Promise<void>;
   onArchive: (deckId: string) => Promise<void>;
+  onItemCountChange: (deckId: string, count: number) => void;
 }
 
-export function DeckDetail({ deck, onBack, onUpdate, onArchive }: DeckDetailProps) {
+export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChange }: DeckDetailProps) {
   const [name, setName] = useState(deck.name);
   const [description, setDescription] = useState(deck.description);
   const [accent, setAccent] = useState<DeckAccent>(deck.accent);
@@ -58,20 +60,7 @@ export function DeckDetail({ deck, onBack, onUpdate, onArchive }: DeckDetailProp
       </div>
 
       <div className="detail-grid">
-        <section className="items-panel">
-          <div className="panel-heading">
-            <div>
-              <p className="kicker">Contents</p>
-              <h2>Language items</h2>
-            </div>
-            <button className="primary-button" type="button">＋ Add item</button>
-          </div>
-          <div className="empty-state">
-            <span lang="zh-Hans">词</span>
-            <h3>This deck is ready for vocabulary</h3>
-            <p>Manual and dictionary-assisted language-item entry are the next development slice.</p>
-          </div>
-        </section>
+        <DeckCards deckId={deck.id} onCountChange={onItemCountChange} />
 
         <aside className="settings-panel">
           <p className="kicker">Settings</p>

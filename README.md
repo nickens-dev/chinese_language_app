@@ -6,7 +6,7 @@ The defining workflow is simple: select one or more decks (or a subset), choose 
 
 ## Project status
 
-The project has an executable local foundation and its first persistent product workflow: deck management.
+The project has executable local deck and card management workflows backed by SQLite.
 
 - [Product specification](docs/product-spec.md)
 - [Technical design](docs/technical-design.md)
@@ -15,6 +15,8 @@ The project has an executable local foundation and its first persistent product 
 - [Architecture decisions](docs/decisions/README.md)
 - [Getting started](docs/getting-started.md)
 - [Deck management](docs/deck-management.md)
+- [Card management](docs/card-management.md)
+- [Dictionary-assisted entry](docs/dictionary-assistance.md)
 
 ## Repository structure
 

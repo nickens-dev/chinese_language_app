@@ -1,10 +1,16 @@
 import { useEffect, useState } from "react";
 
-import { fetchDecks } from "../api/decks";
+import {
+  archiveDeck,
+  createDeck,
+  fetchDecks,
+  updateDeck,
+} from "../api/decks";
+import { DeckDetail } from "../features/decks/DeckDetail";
 import { DeckLibrary } from "../features/decks/DeckLibrary";
-import type { DeckSummary } from "../features/decks/types";
+import type { DeckInput, DeckSummary } from "../features/decks/types";
 
-type LoadState =
+export type LoadState =
   | { status: "loading"; decks: DeckSummary[] }
   | { status: "ready"; decks: DeckSummary[] }
   | { status: "error"; decks: DeckSummary[]; message: string };
@@ -14,6 +20,7 @@ export function App() {
     status: "loading",
     decks: [],
   });
+  const [selectedDeckId, setSelectedDeckId] = useState<string | null>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -29,16 +36,57 @@ export function App() {
     return () => controller.abort();
   }, []);
 
+  const selectedDeck =
+    loadState.decks.find((deck) => deck.id === selectedDeckId) ?? null;
+
+  async function handleCreate(values: DeckInput) {
+    const deck = await createDeck(values);
+    setLoadState((current) => ({
+      status: "ready",
+      decks: [...current.decks, deck],
+    }));
+    setSelectedDeckId(deck.id);
+  }
+
+  async function handleUpdate(deckId: string, values: Partial<DeckInput>) {
+    const deck = await updateDeck(deckId, values);
+    setLoadState((current) => ({
+      status: "ready",
+      decks: current.decks.map((item) => (item.id === deck.id ? deck : item)),
+    }));
+  }
+
+  async function handleArchive(deckId: string) {
+    await archiveDeck(deckId);
+    setLoadState((current) => ({
+      status: "ready",
+      decks: current.decks.filter((deck) => deck.id !== deckId),
+    }));
+    setSelectedDeckId(null);
+  }
+
   return (
     <div className="app-shell">
       <aside className="sidebar">
-        <a className="brand" href="#top" aria-label="Chinese Study home">
+        <button
+          className="brand brand-button"
+          type="button"
+          onClick={() => setSelectedDeckId(null)}
+          aria-label="Chinese Study home"
+        >
           <span className="brand-mark" lang="zh-Hans">中文</span>
           <span>Study</span>
-        </a>
+        </button>
         <nav aria-label="Main navigation">
           <a href="#home">Home</a>
-          <a className="active" href="#decks" aria-current="page">Decks</a>
+          <button
+            className="active"
+            type="button"
+            aria-current="page"
+            onClick={() => setSelectedDeckId(null)}
+          >
+            Decks
+          </button>
           <a href="#study">Study</a>
           <a href="#progress">Progress</a>
           <a href="#suggestions">Suggestions</a>
@@ -54,7 +102,20 @@ export function App() {
           <div><span className="eyebrow">Your library</span></div>
           <button className="icon-button" type="button" aria-label="Open settings">⚙</button>
         </header>
-        <DeckLibrary state={loadState} />
+        {selectedDeck ? (
+          <DeckDetail
+            deck={selectedDeck}
+            onBack={() => setSelectedDeckId(null)}
+            onUpdate={handleUpdate}
+            onArchive={handleArchive}
+          />
+        ) : (
+          <DeckLibrary
+            state={loadState}
+            onOpen={setSelectedDeckId}
+            onCreate={handleCreate}
+          />
+        )}
       </main>
     </div>
   );

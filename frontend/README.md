@@ -13,7 +13,7 @@ src/
   styles/       Shared design tokens and global responsive styles
 ```
 
-The initial slice fetches deck summaries from `GET /api/decks`, renders visual deck cards, filters them locally, and lets the learner select several decks as the starting point for a study session.
+The current slice renders and filters visual deck cards, supports multi-deck selection, and provides create, detail, edit, and archive workflows through the deck API. Language-item management is the next boundary.
 
 ## Commands
 

@@ -12,8 +12,11 @@ def test_schema_enforces_non_negative_item_counts(tmp_path: Path) -> None:
 
     with pytest.raises(sqlite3.IntegrityError, match="CHECK constraint failed"):
         connection.execute(
-            "INSERT INTO deck_summaries (id, name, item_count) VALUES (?, ?, ?)",
-            ("invalid", "Invalid deck", -1),
+            """
+            INSERT INTO decks (id, name, item_count, created_at, updated_at)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            ("invalid", "Invalid deck", -1, "2026-08-06T00:00:00", "2026-08-06T00:00:00"),
         )
 
     connection.close()

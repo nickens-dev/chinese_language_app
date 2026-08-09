@@ -6,7 +6,7 @@ The defining workflow is simple: select one or more decks (or a subset), choose 
 
 ## Project status
 
-The project is currently in product definition, interface design, and initial scaffolding.
+The project has an executable local foundation and its first persistent product workflow: deck management.
 
 - [Product specification](docs/product-spec.md)
 - [Technical design](docs/technical-design.md)
@@ -14,6 +14,7 @@ The project is currently in product definition, interface design, and initial sc
 - [Low-fidelity wireframes](docs/wireframes.md)
 - [Architecture decisions](docs/decisions/README.md)
 - [Getting started](docs/getting-started.md)
+- [Deck management](docs/deck-management.md)
 
 ## Repository structure
 
@@ -24,7 +25,7 @@ docs/           Product, interface, architecture, and decision documents
 scripts/        Future development and setup automation
 ```
 
-Each application directory contains a README describing its purpose, source map, commands, and boundaries. The first executable slice is a visual deck library backed by a local FastAPI and SQLite endpoint.
+Each application directory contains a README describing its purpose, source map, commands, and boundaries. The current executable slice is a visual deck manager backed by local FastAPI and SQLite services.
 
 ## First development slice
 
@@ -34,7 +35,7 @@ The initial implementation includes:
 - multi-deck selection as the entry into a future session builder;
 - a FastAPI health endpoint and deck-summary endpoint;
 - automatic local SQLite schema creation;
-- three demonstration decks inserted only when the database is empty;
+- an empty-library starting point with learner-created decks stored locally;
 - explicit loading, empty, and backend-unavailable interface states.
 
 See [Getting started](docs/getting-started.md) for prerequisites and commands.

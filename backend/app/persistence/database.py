@@ -47,6 +47,47 @@ CREATE TABLE IF NOT EXISTS deck_memberships (
 );
 CREATE INDEX IF NOT EXISTS deck_memberships_position
 ON deck_memberships(deck_id, position);
+
+CREATE TABLE IF NOT EXISTS study_sessions (
+    id TEXT PRIMARY KEY,
+    requested_count INTEGER NOT NULL CHECK (requested_count > 0),
+    prompt_channel TEXT NOT NULL CHECK (prompt_channel IN ('characters', 'english', 'pinyin')),
+    response_channel TEXT NOT NULL CHECK (response_channel IN ('characters', 'english', 'pinyin')),
+    current_index INTEGER NOT NULL DEFAULT 0 CHECK (current_index >= 0),
+    status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')),
+    selection_policy TEXT NOT NULL DEFAULT 'deck-order-v1',
+    created_at TEXT NOT NULL,
+    completed_at TEXT
+);
+CREATE TABLE IF NOT EXISTS study_session_decks (
+    session_id TEXT NOT NULL REFERENCES study_sessions(id),
+    deck_id TEXT NOT NULL REFERENCES decks(id),
+    PRIMARY KEY (session_id, deck_id)
+);
+CREATE TABLE IF NOT EXISTS study_prompts (
+    id TEXT PRIMARY KEY,
+    session_id TEXT NOT NULL REFERENCES study_sessions(id),
+    item_id TEXT NOT NULL REFERENCES language_items(id),
+    position INTEGER NOT NULL CHECK (position >= 0),
+    simplified TEXT NOT NULL,
+    traditional TEXT NOT NULL,
+    pinyin TEXT NOT NULL,
+    english TEXT NOT NULL,
+    UNIQUE (session_id, position)
+);
+CREATE TABLE IF NOT EXISTS study_attempts (
+    id TEXT PRIMARY KEY,
+    prompt_id TEXT NOT NULL UNIQUE REFERENCES study_prompts(id),
+    raw_answer TEXT NOT NULL,
+    normalized_answer TEXT NOT NULL,
+    score REAL NOT NULL CHECK (score >= 0 AND score <= 1),
+    verdict TEXT NOT NULL CHECK (verdict IN ('correct', 'mostly_correct', 'incorrect')),
+    feedback TEXT NOT NULL,
+    evaluator_version TEXT NOT NULL DEFAULT 'typed-v1',
+    created_at TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS study_prompts_session_position
+ON study_prompts(session_id, position);
 """
 
 def open_connection(path: Path) -> sqlite3.Connection:

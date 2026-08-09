@@ -9,9 +9,10 @@ interface DeckDetailProps {
   onUpdate: (deckId: string, values: Partial<DeckInput>) => Promise<void>;
   onArchive: (deckId: string) => Promise<void>;
   onItemCountChange: (deckId: string, count: number) => void;
+  onStudy?: (deckIds: string[]) => void;
 }
 
-export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChange }: DeckDetailProps) {
+export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChange, onStudy }: DeckDetailProps) {
   const [name, setName] = useState(deck.name);
   const [description, setDescription] = useState(deck.description);
   const [accent, setAccent] = useState<DeckAccent>(deck.accent);
@@ -56,7 +57,7 @@ export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChang
           <h1>{deck.name}</h1>
           <p>{deck.itemCount} items • {deck.dueCount} due • {deck.weakCount} weak</p>
         </div>
-        <button className="primary-button" type="button">Study deck</button>
+        <button className="primary-button" type="button" disabled={deck.itemCount === 0} onClick={() => onStudy?.([deck.id])}>Study deck</button>
       </div>
 
       <div className="detail-grid">

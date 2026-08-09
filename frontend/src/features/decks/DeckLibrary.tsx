@@ -11,9 +11,10 @@ interface DeckLibraryProps {
     | { status: "error"; decks: DeckSummary[]; message: string };
   onOpen: (deckId: string) => void;
   onCreate: (values: DeckInput) => Promise<void>;
+  onStudy?: (deckIds: string[]) => void;
 }
 
-export function DeckLibrary({ state, onOpen, onCreate }: DeckLibraryProps) {
+export function DeckLibrary({ state, onOpen, onCreate, onStudy }: DeckLibraryProps) {
   const [query, setQuery] = useState("");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [creating, setCreating] = useState(false);
@@ -105,7 +106,7 @@ export function DeckLibrary({ state, onOpen, onCreate }: DeckLibraryProps) {
           <span><strong>{selected.size}</strong> deck{selected.size === 1 ? "" : "s"} selected</span>
           <div>
             <button className="text-button light" type="button" onClick={() => setSelected(new Set())}>Clear</button>
-            <button className="primary-button light" type="button">Build study session →</button>
+            <button className="primary-button light" type="button" onClick={() => onStudy?.([...selected])}>Build study session →</button>
           </div>
         </div>
       )}

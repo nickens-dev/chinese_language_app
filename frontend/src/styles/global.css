@@ -168,3 +168,49 @@ main { min-width: 0; }
   .items-panel, .settings-panel { padding: 20px; }
   .modal-card { padding: 23px; }
 }
+
+.card-notice { margin-top: 26px; }
+.card-list { display: grid; gap: 12px; margin-top: 26px; }
+.language-card { position: relative; width: 100%; display: grid; grid-template-columns: minmax(120px, .75fr) minmax(140px, 1fr); gap: 5px 22px; padding: 20px 54px 20px 20px; border: 1px solid var(--line); border-radius: 14px; color: var(--ink); background: #fffefa; text-align: left; transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease; }
+.language-card:hover { transform: translateY(-1px); border-color: #a8bcb4; box-shadow: 0 8px 22px rgba(37,54,47,.07); }
+.card-type { grid-column: 1 / -1; width: max-content; padding: 4px 7px; border-radius: 999px; color: var(--jade-dark); background: #e5f0e8; font-size: 9px; font-weight: 850; letter-spacing: .09em; text-transform: uppercase; }
+.card-chinese { grid-column: 1; font-family: Georgia, "Noto Serif SC", serif; font-size: 28px; line-height: 1.3; }
+.card-traditional { grid-column: 1; color: var(--muted); font-family: Georgia, "Noto Serif TC", serif; font-size: 14px; }
+.card-pinyin { grid-column: 1; color: var(--coral); font-size: 13px; }
+.card-english { grid-column: 2; grid-row: 2; align-self: center; font-size: 15px; font-weight: 700; line-height: 1.45; }
+.card-notes { grid-column: 2; color: var(--muted); font-size: 11px; line-height: 1.5; }
+.edit-hint { position: absolute; top: 20px; right: 18px; color: var(--jade); font-size: 10px; font-weight: 800; text-transform: uppercase; }
+.card-editor { width: min(620px, 100%); }
+.card-form-actions { position: sticky; bottom: -30px; z-index: 2; margin: 0 -30px -30px; padding: 14px 30px; border-top: 1px solid var(--line); background: var(--paper); }
+.card-form-actions .form-spacer { flex: 1; }
+.remove-confirm { display: flex; flex-wrap: wrap; align-items: center; gap: 7px; padding: 12px; border: 1px solid #e6b8aa; border-radius: 10px; background: #fff4ef; }
+.remove-confirm p { width: 100%; margin: 0 0 3px; color: #7b3826; font-size: 12px; font-weight: 700; }
+
+@media (max-width: 560px) {
+  .language-card { grid-template-columns: 1fr; padding-right: 48px; }
+  .card-type, .card-chinese, .card-traditional, .card-pinyin, .card-english, .card-notes { grid-column: 1; grid-row: auto; }
+  .card-form-actions { bottom: -23px; margin: 0 -23px -23px; padding: 14px 23px; align-items: stretch; flex-direction: column; }
+  .card-form-actions .form-spacer { display: none; }
+}
+.dictionary-assist { display: grid; gap: 12px; margin-top: 22px; padding: 16px; border: 1px solid #c9d9d1; border-radius: 13px; background: #f2f7f1; }
+.dictionary-assist h3 { margin: 0; font-family: Georgia, serif; font-size: 18px; font-weight: 500; }
+.dictionary-assist p { margin: 4px 0 0; color: var(--muted); font-size: 11px; line-height: 1.45; }
+.dictionary-search { display: flex; gap: 8px; }
+.dictionary-search input { min-width: 0; flex: 1; padding: 10px 12px; border: 1px solid var(--line); border-radius: 9px; outline: none; background: white; }
+.dictionary-search input:focus { border-color: var(--jade); box-shadow: 0 0 0 3px rgba(23,107,91,.12); }
+.candidate-list { max-height: 270px; display: grid; gap: 7px; overflow: auto; padding-right: 3px; }
+.dictionary-candidate { display: grid; grid-template-columns: auto auto minmax(90px, 1fr); gap: 3px 9px; padding: 11px; border: 1px solid var(--line); border-radius: 9px; color: var(--ink); background: white; text-align: left; }
+.dictionary-candidate:hover { border-color: var(--jade); background: #fbfdf9; }
+.candidate-characters { font-size: 18px; font-weight: 750; }
+.candidate-pinyin { align-self: center; color: var(--coral); font-size: 11px; }
+.candidate-definition { grid-column: 1 / -1; color: var(--ink); font-size: 11px; line-height: 1.45; }
+.candidate-source { grid-column: 1 / -1; color: var(--muted); font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.lookup-success { padding: 8px 10px; border-radius: 8px; color: var(--jade-dark) !important; background: #e2eee2; font-weight: 700; }
+.lookup-hint { padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.65); }
+.source-note { margin: -4px 0 0; padding: 9px 10px; border-radius: 8px; color: var(--jade-dark); background: #eaf3e8; font-size: 10px; }
+
+@media (max-width: 560px) {
+  .dictionary-search { align-items: stretch; flex-direction: column; }
+  .dictionary-candidate { grid-template-columns: auto auto; }
+  .candidate-pinyin { grid-column: 1 / -1; }
+}

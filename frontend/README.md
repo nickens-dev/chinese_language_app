@@ -13,7 +13,7 @@ src/
   styles/       Shared design tokens and global responsive styles
 ```
 
-The current slice renders and filters visual deck cards, supports multi-deck selection, and provides create, detail, edit, and archive workflows through the deck API. Language-item management is the next boundary.
+The current slice renders and filters visual deck cards, supports multi-deck selection, and provides create, detail, edit, and archive workflows through the deck API. Manual word, phrase, and sentence management is available inside each deck; dictionary-assisted entry now searches sourced candidates before learner review.
 
 ## Commands
 

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import {
   archiveDeck,
@@ -56,6 +56,16 @@ export function App() {
     }));
   }
 
+  const handleItemCountChange = useCallback((deckId: string, count: number) => {
+    setLoadState((current) => ({
+      ...current,
+      decks: current.decks.map((deck) =>
+        deck.id === deckId && deck.itemCount !== count
+          ? { ...deck, itemCount: count }
+          : deck,
+      ),
+    }));
+  }, []);
   async function handleArchive(deckId: string) {
     await archiveDeck(deckId);
     setLoadState((current) => ({
@@ -108,6 +118,7 @@ export function App() {
             onBack={() => setSelectedDeckId(null)}
             onUpdate={handleUpdate}
             onArchive={handleArchive}
+            onItemCountChange={handleItemCountChange}
           />
         ) : (
           <DeckLibrary

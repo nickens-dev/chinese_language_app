@@ -32,8 +32,12 @@ export interface StudySessionInput {
 }
 
 export interface StudyAttemptResult {
+  attemptId: string;
   score: number;
   verdict: StudyVerdict;
+  finalVerdict: StudyVerdict;
+  overridden: boolean;
+  acceptedAnswerAdded: boolean;
   expectedAnswers: string[];
   feedback: string;
   evaluatorVersion: string;

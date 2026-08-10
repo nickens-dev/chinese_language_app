@@ -62,10 +62,22 @@ class StudyAttemptCreate(BaseModel):
         return self
 
 
+class StudyAttemptReview(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    add_to_card: bool = Field(default=False, alias="addToCard")
+    reason: str = Field(
+        default="Learner disagreed with the automatic evaluation.", max_length=300
+    )
+
+
 class StudyAttemptResult(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
+    attempt_id: str = Field(alias="attemptId")
     score: float
     verdict: StudyVerdict
+    final_verdict: StudyVerdict = Field(alias="finalVerdict")
+    overridden: bool = False
+    accepted_answer_added: bool = Field(default=False, alias="acceptedAnswerAdded")
     expected_answers: list[str] = Field(alias="expectedAnswers")
     feedback: str
     evaluator_version: str = Field(alias="evaluatorVersion")

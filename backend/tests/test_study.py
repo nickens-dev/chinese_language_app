@@ -62,3 +62,63 @@ def test_session_validates_modes_and_available_content(client: TestClient) -> No
     invalid = client.post("/api/study/sessions", json={"deckIds": [deck["id"]], "requestedCount": 10, "promptChannel": "english", "responseChannel": "pinyin"})
     assert empty.status_code == 409
     assert invalid.status_code == 422
+
+def test_learner_can_override_and_save_an_accepted_answer(client: TestClient) -> None:
+    deck = create_deck(client)
+    add_card(client, deck["id"], "你", "nǐ", "you (informal)")
+    payload = {
+        "deckIds": [deck["id"]],
+        "requestedCount": 1,
+        "promptChannel": "characters",
+        "responseChannel": "english",
+    }
+    first = client.post("/api/study/sessions", json=payload).json()
+    evaluated = client.post(
+        f"/api/study/sessions/{first['id']}/attempts",
+        json={"answer": "informal you"},
+    ).json()
+    assert evaluated["verdict"] == "incorrect"
+    assert evaluated["finalVerdict"] == "incorrect"
+
+    reviewed = client.post(
+        f"/api/study/sessions/attempts/{evaluated['attemptId']}/review",
+        json={"addToCard": True, "reason": "Equivalent wording."},
+    )
+    assert reviewed.status_code == 200
+    assert reviewed.json()["verdict"] == "incorrect"
+    assert reviewed.json()["finalVerdict"] == "correct"
+    assert reviewed.json()["overridden"] is True
+    assert reviewed.json()["acceptedAnswerAdded"] is True
+
+    second = client.post("/api/study/sessions", json=payload).json()
+    reevaluated = client.post(
+        f"/api/study/sessions/{second['id']}/attempts",
+        json={"answer": "informal you"},
+    ).json()
+    assert reevaluated["verdict"] == "correct"
+    assert "informal you" in reevaluated["expectedAnswers"]
+
+def test_pinyin_tone_numbers_and_marks_are_equivalent(client: TestClient) -> None:
+    deck = create_deck(client)
+    add_card(client, deck["id"], "你", "nǐ", "you")
+    payload = {
+        "deckIds": [deck["id"]],
+        "requestedCount": 1,
+        "promptChannel": "characters",
+        "responseChannel": "pinyin",
+    }
+    numbered_session = client.post("/api/study/sessions", json=payload).json()
+    numbered = client.post(
+        f"/api/study/sessions/{numbered_session['id']}/attempts",
+        json={"answer": "ni3"},
+    ).json()
+    assert numbered["score"] == 1
+    assert numbered["verdict"] == "correct"
+
+    marked_session = client.post("/api/study/sessions", json=payload).json()
+    marked = client.post(
+        f"/api/study/sessions/{marked_session['id']}/attempts",
+        json={"answer": "nǐ"},
+    ).json()
+    assert marked["score"] == 1
+    assert marked["verdict"] == "correct"

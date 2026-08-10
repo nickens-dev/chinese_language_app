@@ -4,7 +4,12 @@ from uuid import uuid4
 
 from app.persistence.database import connect
 from app.study.evaluator import evaluate, normalize_for_storage
-from app.study.schemas import StudyAttemptResult, StudySession, StudySessionCreate
+from app.study.schemas import (
+    StudyAttemptResult,
+    StudyAttemptReview,
+    StudySession,
+    StudySessionCreate,
+)
 
 
 class StudyNotFoundError(LookupError):
@@ -83,25 +88,128 @@ def get_session(session_id: str) -> StudySession:
         return _session(connection, session_id)
 
 
+def _accepted_answers(
+    connection: Connection, item_id: str, channel: str
+) -> list[str]:
+    return [
+        row["answer"]
+        for row in connection.execute(
+            """SELECT answer FROM accepted_answers
+            WHERE item_id = ? AND channel = ? ORDER BY created_at""",
+            (item_id, channel),
+        )
+    ]
+
+
 def submit_attempt(session_id: str, answer: str) -> StudyAttemptResult:
-    now = datetime.now(UTC).isoformat()
+    now, attempt_id = datetime.now(UTC).isoformat(), str(uuid4())
     with connect() as connection:
         session = _session(connection, session_id)
         if session.status != "active" or session.current_prompt is None:
             raise StudyStateError("This session is already complete.")
-        prompt = connection.execute("SELECT * FROM study_prompts WHERE id = ?", (session.current_prompt.id,)).fetchone()
-        if connection.execute("SELECT 1 FROM study_attempts WHERE prompt_id = ?", (prompt["id"],)).fetchone():
+        prompt = connection.execute(
+            "SELECT * FROM study_prompts WHERE id = ?", (session.current_prompt.id,)
+        ).fetchone()
+        if connection.execute(
+            "SELECT 1 FROM study_attempts WHERE prompt_id = ?", (prompt["id"],)
+        ).fetchone():
             raise StudyStateError("This prompt has already been answered.")
-        snapshot = {key: prompt[key] for key in ("simplified", "traditional", "pinyin", "english")}
-        result = evaluate(answer, session.response_channel, snapshot)
+        snapshot = {
+            key: prompt[key]
+            for key in ("simplified", "traditional", "pinyin", "english")
+        }
+        accepted = _accepted_answers(
+            connection, prompt["item_id"], session.response_channel
+        )
+        result = evaluate(answer, session.response_channel, snapshot, accepted)
         connection.execute(
-            """INSERT INTO study_attempts (id, prompt_id, raw_answer, normalized_answer, score, verdict, feedback, evaluator_version, created_at)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (str(uuid4()), prompt["id"], answer, normalize_for_storage(answer, session.response_channel), result.score, result.verdict, result.feedback, result.evaluator_version, now),
+            """INSERT INTO study_attempts (
+                id, prompt_id, raw_answer, normalized_answer, score, verdict,
+                final_verdict, feedback, evaluator_version, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+            (
+                attempt_id,
+                prompt["id"],
+                answer,
+                normalize_for_storage(answer, session.response_channel),
+                result.score,
+                result.verdict,
+                result.verdict,
+                result.feedback,
+                result.evaluator_version,
+                now,
+            ),
         )
         connection.commit()
-        return result
+        return result.model_copy(update={"attempt_id": attempt_id})
 
+
+def review_attempt(attempt_id: str, values: StudyAttemptReview) -> StudyAttemptResult:
+    now = datetime.now(UTC).isoformat()
+    with connect() as connection:
+        row = connection.execute(
+            """SELECT attempts.*, prompts.item_id, prompts.simplified,
+            prompts.traditional, prompts.pinyin, prompts.english,
+            sessions.response_channel
+            FROM study_attempts AS attempts
+            JOIN study_prompts AS prompts ON prompts.id = attempts.prompt_id
+            JOIN study_sessions AS sessions ON sessions.id = prompts.session_id
+            WHERE attempts.id = ?""",
+            (attempt_id,),
+        ).fetchone()
+        if row is None:
+            raise StudyNotFoundError(attempt_id)
+        if row["overridden_at"] is not None:
+            raise StudyStateError("This attempt has already been reviewed.")
+        connection.execute(
+            """UPDATE study_attempts
+            SET final_verdict = 'correct', override_reason = ?, overridden_at = ?
+            WHERE id = ?""",
+            (values.reason.strip(), now, attempt_id),
+        )
+        answer_added = False
+        if values.add_to_card:
+            normalized = normalize_for_storage(
+                row["raw_answer"], row["response_channel"]
+            )
+            result = connection.execute(
+                """INSERT OR IGNORE INTO accepted_answers (
+                    id, item_id, channel, answer, normalized_answer,
+                    source_attempt_id, created_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    str(uuid4()),
+                    row["item_id"],
+                    row["response_channel"],
+                    row["raw_answer"],
+                    normalized,
+                    attempt_id,
+                    now,
+                ),
+            )
+            answer_added = result.rowcount > 0
+        snapshot = {
+            key: row[key]
+            for key in ("simplified", "traditional", "pinyin", "english")
+        }
+        expected = evaluate(
+            row["raw_answer"],
+            row["response_channel"],
+            snapshot,
+            _accepted_answers(connection, row["item_id"], row["response_channel"]),
+        ).expected_answers
+        connection.commit()
+        return StudyAttemptResult(
+            attemptId=attempt_id,
+            score=row["score"],
+            verdict=row["verdict"],
+            finalVerdict="correct",
+            overridden=True,
+            acceptedAnswerAdded=answer_added,
+            expectedAnswers=expected,
+            feedback="Marked correct by you.",
+            evaluatorVersion=row["evaluator_version"],
+        )
 
 def advance_session(session_id: str) -> StudySession:
     now = datetime.now(UTC).isoformat()

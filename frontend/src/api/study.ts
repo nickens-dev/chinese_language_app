@@ -27,3 +27,15 @@ export async function submitStudyAttempt(sessionId: string, answer: string): Pro
 export async function advanceStudySession(sessionId: string): Promise<StudySession> {
   return readSession(await fetch(`/api/study/sessions/${sessionId}/advance`, { method: "POST" }));
 }
+export async function reviewStudyAttempt(
+  attemptId: string,
+  addToCard: boolean,
+): Promise<StudyAttemptResult> {
+  const response = await fetch(`/api/study/sessions/attempts/${attemptId}/review`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ addToCard }),
+  });
+  if (!response.ok) throw await readError(response);
+  return response.json() as Promise<StudyAttemptResult>;
+}

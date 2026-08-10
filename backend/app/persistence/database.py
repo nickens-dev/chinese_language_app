@@ -82,12 +82,26 @@ CREATE TABLE IF NOT EXISTS study_attempts (
     normalized_answer TEXT NOT NULL,
     score REAL NOT NULL CHECK (score >= 0 AND score <= 1),
     verdict TEXT NOT NULL CHECK (verdict IN ('correct', 'mostly_correct', 'incorrect')),
+    final_verdict TEXT NOT NULL CHECK (final_verdict IN ('correct', 'mostly_correct', 'incorrect')),
     feedback TEXT NOT NULL,
+    override_reason TEXT,
+    overridden_at TEXT,
     evaluator_version TEXT NOT NULL DEFAULT 'typed-v1',
     created_at TEXT NOT NULL
 );
 CREATE INDEX IF NOT EXISTS study_prompts_session_position
 ON study_prompts(session_id, position);
+
+CREATE TABLE IF NOT EXISTS accepted_answers (
+    id TEXT PRIMARY KEY,
+    item_id TEXT NOT NULL REFERENCES language_items(id),
+    channel TEXT NOT NULL CHECK (channel IN ('characters', 'english', 'pinyin')),
+    answer TEXT NOT NULL,
+    normalized_answer TEXT NOT NULL,
+    source_attempt_id TEXT REFERENCES study_attempts(id),
+    created_at TEXT NOT NULL,
+    UNIQUE (item_id, channel, normalized_answer)
+);
 """
 
 def open_connection(path: Path) -> sqlite3.Connection:
@@ -118,3 +132,15 @@ def initialize_database() -> None:
             connection.execute("ALTER TABLE language_items ADD COLUMN source_name TEXT NOT NULL DEFAULT 'user'")
         if "source_entry_id" not in columns:
             connection.execute("ALTER TABLE language_items ADD COLUMN source_entry_id TEXT")
+        attempt_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(study_attempts)")
+        }
+        if "final_verdict" not in attempt_columns:
+            connection.execute("ALTER TABLE study_attempts ADD COLUMN final_verdict TEXT")
+            connection.execute(
+                "UPDATE study_attempts SET final_verdict = verdict WHERE final_verdict IS NULL"
+            )
+        if "override_reason" not in attempt_columns:
+            connection.execute("ALTER TABLE study_attempts ADD COLUMN override_reason TEXT")
+        if "overridden_at" not in attempt_columns:
+            connection.execute("ALTER TABLE study_attempts ADD COLUMN overridden_at TEXT")

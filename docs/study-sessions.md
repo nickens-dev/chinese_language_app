@@ -25,6 +25,15 @@ The first study implementation is a persistent, typed-response learning loop. It
 
 Only one attempt is accepted for each prompt in this version. Expected answers are not returned until the learner submits an answer.
 
+### Learner review and accepted alternatives
+
+A learner can disagree with a `mostly_correct` or `incorrect` result in two ways:
+
+- **Mark correct** changes the final judgment for that attempt only.
+- **Mark correct + save answer** also stores the response as a format-specific accepted answer on the underlying card.
+
+The original evaluator verdict, score, and evaluator version remain unchanged. The attempt separately records its final verdict, override reason, and review time. Future evaluations include saved alternatives for the matching response channel, so an English synonym cannot affect character or pinyin evaluation.
+
 ## Selection and evaluation
 
 Selection policy `deck-order-v1` is deterministic. It follows deck membership order, deduplicates cards shared by selected decks, and takes up to the requested count. The stored policy name makes future mastery-based selection auditable.

@@ -6,11 +6,13 @@ from app.study.repository import (
     advance_session,
     create_session,
     get_session,
+    review_attempt,
     submit_attempt,
 )
 from app.study.schemas import (
     StudyAttemptCreate,
     StudyAttemptResult,
+    StudyAttemptReview,
     StudySession,
     StudySessionCreate,
 )
@@ -58,6 +60,16 @@ def post_attempt(session_id: str, values: StudyAttemptCreate) -> StudyAttemptRes
 def post_advance(session_id: str) -> StudySession:
     try:
         return advance_session(session_id)
+    except StudyNotFoundError as error:
+        raise _not_found(error) from error
+    except StudyStateError as error:
+        raise _conflict(error) from error
+@router.post("/attempts/{attempt_id}/review", response_model=StudyAttemptResult)
+def post_attempt_review(
+    attempt_id: str, values: StudyAttemptReview
+) -> StudyAttemptResult:
+    try:
+        return review_attempt(attempt_id, values)
     except StudyNotFoundError as error:
         raise _not_found(error) from error
     except StudyStateError as error:

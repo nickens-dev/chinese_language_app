@@ -122,3 +122,39 @@ def test_pinyin_tone_numbers_and_marks_are_equivalent(client: TestClient) -> Non
     ).json()
     assert marked["score"] == 1
     assert marked["verdict"] == "correct"
+
+def test_completion_summary_tracks_session_and_directional_history(
+    client: TestClient,
+) -> None:
+    deck = create_deck(client)
+    add_card(client, deck["id"], "好", "hǎo", "good")
+    payload = {
+        "deckIds": [deck["id"]],
+        "requestedCount": 1,
+        "promptChannel": "characters",
+        "responseChannel": "english",
+    }
+    first = client.post("/api/study/sessions", json=payload).json()
+    client.post(
+        f"/api/study/sessions/{first['id']}/attempts", json={"answer": "good"}
+    )
+    first_summary = client.post(
+        f"/api/study/sessions/{first['id']}/advance"
+    ).json()["summary"]
+    assert first_summary["correctPercent"] == 100
+    assert first_summary["averageScore"] == 100
+
+    second = client.post("/api/study/sessions", json=payload).json()
+    client.post(
+        f"/api/study/sessions/{second['id']}/attempts", json={"answer": "bad"}
+    )
+    summary = client.post(
+        f"/api/study/sessions/{second['id']}/advance"
+    ).json()["summary"]
+    assert summary["correctCount"] == 0
+    assert summary["incorrectCount"] == 1
+    assert summary["correctPercent"] == 0
+    assert summary["results"][0]["simplified"] == "好"
+    assert summary["results"][0]["historicalCorrect"] == 1
+    assert summary["results"][0]["historicalAttempts"] == 2
+    assert summary["results"][0]["historicalPercent"] == 50

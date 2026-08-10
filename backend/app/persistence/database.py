@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS decks (
     due_count INTEGER NOT NULL DEFAULT 0 CHECK (due_count >= 0),
     weak_count INTEGER NOT NULL DEFAULT 0 CHECK (weak_count >= 0),
     last_studied_at TEXT,
-    accent TEXT NOT NULL DEFAULT 'jade' CHECK (accent IN ('jade', 'coral', 'gold', 'ink')),
+    accent TEXT NOT NULL DEFAULT 'jade' CHECK (accent IN ('jade', 'coral', 'gold', 'ink', 'sky', 'plum', 'rose', 'tangerine', 'moss', 'slate')),
     created_at TEXT NOT NULL,
     updated_at TEXT NOT NULL,
     archived_at TEXT
@@ -121,10 +121,46 @@ def connect() -> Iterator[sqlite3.Connection]:
         connection.close()
 
 
+def _migrate_deck_accents(connection: sqlite3.Connection) -> None:
+    """Rebuild the early four-accent deck table without losing relationships."""
+    table_sql = connection.execute(
+        "SELECT sql FROM sqlite_master WHERE type = 'table' AND name = 'decks'"
+    ).fetchone()[0]
+    if "'slate'" in table_sql:
+        return
+    connection.executescript(
+        """
+        CREATE TABLE decks_with_current_accents (
+            id TEXT PRIMARY KEY,
+            name TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            item_count INTEGER NOT NULL DEFAULT 0 CHECK (item_count >= 0),
+            due_count INTEGER NOT NULL DEFAULT 0 CHECK (due_count >= 0),
+            weak_count INTEGER NOT NULL DEFAULT 0 CHECK (weak_count >= 0),
+            last_studied_at TEXT,
+            accent TEXT NOT NULL DEFAULT 'jade' CHECK (
+                accent IN ('jade', 'coral', 'gold', 'ink', 'sky', 'plum',
+                           'rose', 'tangerine', 'moss', 'slate')
+            ),
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL,
+            archived_at TEXT
+        );
+        INSERT INTO decks_with_current_accents SELECT * FROM decks;
+        DROP TABLE decks;
+        ALTER TABLE decks_with_current_accents RENAME TO decks;
+        CREATE UNIQUE INDEX active_deck_name
+        ON decks(name COLLATE NOCASE)
+        WHERE archived_at IS NULL;
+        """
+    )
+
 def initialize_database() -> None:
     """Create the current schema while preserving all existing deck data."""
     with connect() as connection:
+        connection.execute("PRAGMA foreign_keys = OFF")
         connection.executescript(SCHEMA)
+        _migrate_deck_accents(connection)
         columns = {row["name"] for row in connection.execute("PRAGMA table_info(language_items)")}
         if "traditional" not in columns:
             connection.execute("ALTER TABLE language_items ADD COLUMN traditional TEXT NOT NULL DEFAULT ''")

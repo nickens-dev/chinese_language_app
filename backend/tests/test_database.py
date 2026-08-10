@@ -53,3 +53,37 @@ def test_initialization_adds_traditional_form_to_early_card_table(
     columns = {row["name"] for row in connection.execute("PRAGMA table_info(language_items)")}
     connection.close()
     assert {"traditional", "source_name", "source_entry_id"} <= columns
+
+def test_initialization_migrates_early_deck_accent_constraint(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "early-accents.db"
+    connection = database.open_connection(path)
+    connection.execute(
+        """CREATE TABLE decks (
+            id TEXT PRIMARY KEY, name TEXT NOT NULL,
+            description TEXT NOT NULL DEFAULT '',
+            item_count INTEGER NOT NULL DEFAULT 0 CHECK (item_count >= 0),
+            due_count INTEGER NOT NULL DEFAULT 0 CHECK (due_count >= 0),
+            weak_count INTEGER NOT NULL DEFAULT 0 CHECK (weak_count >= 0),
+            last_studied_at TEXT,
+            accent TEXT NOT NULL DEFAULT 'jade'
+                CHECK (accent IN ('jade', 'coral', 'gold', 'ink')),
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL, archived_at TEXT
+        )"""
+    )
+    connection.execute(
+        """INSERT INTO decks (id, name, accent, created_at, updated_at)
+        VALUES ('deck-1', 'Existing', 'coral', '2026-01-01', '2026-01-01')"""
+    )
+    connection.commit()
+    connection.close()
+    monkeypatch.setattr(database, "settings", Settings(database_path=path))
+
+    database.initialize_database()
+
+    connection = database.open_connection(path)
+    connection.execute("UPDATE decks SET accent = 'plum' WHERE id = 'deck-1'")
+    row = connection.execute("SELECT name, accent FROM decks WHERE id = 'deck-1'").fetchone()
+    connection.close()
+    assert dict(row) == {"name": "Existing", "accent": "plum"}

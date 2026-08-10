@@ -5,6 +5,7 @@ interface DeckCardProps {
   selected: boolean;
   onToggle: (deckId: string) => void;
   onOpen: (deckId: string) => void;
+  onStudy?: (deckId: string) => void;
 }
 
 function studyLabel(value: string | null): string {
@@ -12,7 +13,7 @@ function studyLabel(value: string | null): string {
   return "Last studied " + new Intl.DateTimeFormat("en", { dateStyle: "medium" }).format(new Date(value));
 }
 
-export function DeckCard({ deck, selected, onToggle, onOpen }: DeckCardProps) {
+export function DeckCard({ deck, selected, onToggle, onOpen, onStudy }: DeckCardProps) {
   return (
     <article className={"deck-card accent-" + deck.accent + (selected ? " selected" : "")}>
       <div className="deck-card-topline">
@@ -39,7 +40,7 @@ export function DeckCard({ deck, selected, onToggle, onOpen }: DeckCardProps) {
         <span>{studyLabel(deck.lastStudiedAt)}</span>
         <div>
           <button className="text-button" type="button" onClick={() => onOpen(deck.id)}>Open</button>
-          <button className="small-primary" type="button">Study</button>
+          <button className="small-primary" type="button" disabled={deck.itemCount === 0} onClick={() => onStudy?.(deck.id)}>Study</button>
         </div>
       </footer>
     </article>

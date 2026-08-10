@@ -7,8 +7,10 @@ from app.study.evaluator import evaluate, normalize_for_storage
 from app.study.schemas import (
     StudyAttemptResult,
     StudyAttemptReview,
+    StudyCardResult,
     StudySession,
     StudySessionCreate,
+    StudySessionSummary,
 )
 
 
@@ -19,6 +21,59 @@ class StudyNotFoundError(LookupError):
 class StudyStateError(ValueError):
     pass
 
+
+def _summary(
+    connection: Connection, session_id: str, prompt_channel: str, response_channel: str
+) -> StudySessionSummary:
+    rows = connection.execute(
+        """SELECT prompts.id AS prompt_id, prompts.item_id, prompts.simplified,
+        prompts.pinyin, prompts.english, attempts.raw_answer, attempts.score,
+        attempts.verdict, attempts.final_verdict, attempts.overridden_at
+        FROM study_prompts AS prompts
+        JOIN study_attempts AS attempts ON attempts.prompt_id = prompts.id
+        WHERE prompts.session_id = ? ORDER BY prompts.position""",
+        (session_id,),
+    ).fetchall()
+    results: list[StudyCardResult] = []
+    for row in rows:
+        history = connection.execute(
+            """SELECT COUNT(*) AS attempts,
+            SUM(CASE WHEN attempts.final_verdict = 'correct' THEN 1 ELSE 0 END)
+                AS correct
+            FROM study_attempts AS attempts
+            JOIN study_prompts AS prompts ON prompts.id = attempts.prompt_id
+            JOIN study_sessions AS sessions ON sessions.id = prompts.session_id
+            WHERE prompts.item_id = ? AND sessions.prompt_channel = ?
+                AND sessions.response_channel = ?""",
+            (row["item_id"], prompt_channel, response_channel),
+        ).fetchone()
+        historical_attempts = history["attempts"]
+        historical_correct = history["correct"] or 0
+        results.append(
+            StudyCardResult(
+                promptId=row["prompt_id"], simplified=row["simplified"],
+                pinyin=row["pinyin"], english=row["english"],
+                answer=row["raw_answer"], score=row["score"],
+                evaluatorVerdict=row["verdict"], finalVerdict=row["final_verdict"],
+                overridden=row["overridden_at"] is not None,
+                historicalCorrect=historical_correct,
+                historicalAttempts=historical_attempts,
+                historicalPercent=round(historical_correct / historical_attempts * 100, 1),
+            )
+        )
+    total = len(results)
+    counts = {
+        verdict: sum(result.final_verdict == verdict for result in results)
+        for verdict in ("correct", "mostly_correct", "incorrect")
+    }
+    return StudySessionSummary(
+        correctCount=counts["correct"], mostlyCorrectCount=counts["mostly_correct"],
+        incorrectCount=counts["incorrect"],
+        overriddenCount=sum(result.overridden for result in results),
+        correctPercent=round(counts["correct"] / total * 100, 1) if total else 0,
+        averageScore=round(sum(result.score for result in results) / total * 100, 1) if total else 0,
+        results=results,
+    )
 
 def _session(connection: Connection, session_id: str) -> StudySession:
     row = connection.execute("SELECT * FROM study_sessions WHERE id = ?", (session_id,)).fetchone()
@@ -43,6 +98,8 @@ def _session(connection: Connection, session_id: str) -> StudySession:
         id=row["id"], status=row["status"], requestedCount=row["requested_count"], actualCount=count,
         currentIndex=row["current_index"], promptChannel=row["prompt_channel"], responseChannel=row["response_channel"],
         createdAt=row["created_at"], completedAt=row["completed_at"], currentPrompt=current,
+        summary=_summary(connection, session_id, row["prompt_channel"], row["response_channel"])
+        if row["status"] == "completed" else None,
     )
 
 

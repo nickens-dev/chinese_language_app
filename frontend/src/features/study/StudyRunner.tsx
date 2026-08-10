@@ -30,8 +30,30 @@ export function StudyRunner({ initialSession, onExit }: StudyRunnerProps) {
 
   async function next() { setBusy(true); setError(null); try { const updated = await advanceStudySession(session.id); setSession(updated); setAnswer(""); setResult(null); } catch (reason) { setError(reason instanceof Error ? reason.message : "The session could not continue."); } finally { setBusy(false); } }
 
-  if (session.status === "completed") return <section className="page study-complete"><div className="completion-card"><span>✓</span><p className="kicker">Session complete</p><h1>You studied {session.actualCount} card{session.actualCount === 1 ? "" : "s"}.</h1><p>Every answer was saved locally. Mastery-based review and detailed progress summaries will build on this history.</p><button className="primary-button" type="button" onClick={onExit}>Return to decks</button></div></section>;
-  if (!prompt) return null;
+  if (session.status === "completed") {
+    const summary = session.summary;
+    return <section className="page study-complete">
+      <div className="completion-heading">
+        <span className="completion-check">✓</span>
+        <div><p className="kicker">Session complete</p><h1>You studied {session.actualCount} card{session.actualCount === 1 ? "" : "s"}.</h1><p>Results use your final reviewed judgments. Historical accuracy is specific to {session.promptChannel} → {session.responseChannel}.</p></div>
+        <button className="primary-button" type="button" onClick={onExit}>Return to decks</button>
+      </div>
+      {summary && <>
+        <div className="summary-grid" aria-label="Session score summary">
+          <article><strong>{summary.correctPercent}%</strong><span>Answered correctly</span></article>
+          <article><strong>{summary.averageScore}%</strong><span>Average match score</span></article>
+          <article><strong>{summary.correctCount}</strong><span>Correct</span></article>
+          <article><strong>{summary.mostlyCorrectCount}</strong><span>Mostly correct</span></article>
+          <article><strong>{summary.incorrectCount}</strong><span>Incorrect</span></article>
+          <article><strong>{summary.overriddenCount}</strong><span>Learner overrides</span></article>
+        </div>
+        <div className="results-panel">
+          <div className="results-heading"><div><p className="kicker">Card results</p><h2>Performance by word</h2></div><span>{session.promptChannel} → {session.responseChannel}</span></div>
+          <div className="results-table-wrap"><table className="results-table"><thead><tr><th>Card</th><th>Your answer</th><th>This session</th><th>Match</th><th>Historical accuracy</th></tr></thead><tbody>{summary.results.map((item) => <tr key={item.promptId}><td><strong lang="zh-Hans">{item.simplified}</strong><span>{item.pinyin}</span><small>{item.english}</small></td><td>{item.answer}</td><td><span className={`result-badge verdict-${item.finalVerdict}`}>{item.finalVerdict.replace("_", " ")}</span>{item.overridden && <small>Reviewed by you</small>}</td><td>{Math.round(item.score * 100)}%</td><td><strong>{item.historicalPercent}%</strong><small>{item.historicalCorrect} of {item.historicalAttempts} correct</small></td></tr>)}</tbody></table></div>
+        </div>
+      </>}
+    </section>;
+  }  if (!prompt) return null;
   const percent = Math.round((prompt.position / prompt.total) * 100);
   return <section className="page study-runner">
     <div className="runner-top"><button className="back-button" type="button" onClick={onExit}>× End session</button><span>Card {prompt.position + 1} of {prompt.total}</span></div>

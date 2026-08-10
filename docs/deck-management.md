@@ -22,7 +22,7 @@ Archiving is intentionally not deletion. Archived decks disappear from the activ
 | PATCH | /api/decks/{deck_id} | Update supplied fields | 200 |
 | DELETE | /api/decks/{deck_id} | Archive a deck | 204 |
 
-Names are trimmed, required, limited to 80 characters, and unique among active decks without regard to letter case. Descriptions are trimmed and limited to 500 characters. Supported accents are jade, coral, gold, and ink.
+Names are trimmed, required, limited to 80 characters, and unique among active decks without regard to letter case. Descriptions are trimmed and limited to 500 characters. Supported accents are jade, coral, gold, ink, sky, plum, rose, tangerine, moss, and slate. The create and edit interfaces use one shared palette definition.
 
 The API uses camel-case response fields for TypeScript clients while Python and SQLite retain snake-case names internally.
 
@@ -31,11 +31,11 @@ The API uses camel-case response fields for TypeScript clients while Python and 
 The decks table is the source of truth for deck identity and lifecycle. On startup, the application:
 
 1. creates the current schema and active-name index when needed;
-2. leaves every existing deck record unchanged;
+2. migrates the original four-color constraint to the current ten-color palette while preserving every existing deck and relationship;
 3. presents the empty-library state when the learner has not created a deck.
 
 The application never inserts demonstration decks. SQLite is the source of truth for the learner's deck library.
 
 ## Current boundary
 
-This slice manages decks, not language items. The detail screen deliberately shows an empty-content state and identifies manual and dictionary-assisted item entry as the next milestone.
+Deck cards and deck-detail screens both provide direct study entry points. Empty decks keep their Study action disabled; non-empty decks open the session builder with that deck preselected. Card management, dictionary-assisted entry, and typed study sessions are documented separately.

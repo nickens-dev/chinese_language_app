@@ -77,4 +77,20 @@ describe("DeckLibrary", () => {
       }),
     );
   });
-});
+
+  it("starts a session builder from a non-empty deck card", () => {
+    const onStudy = vi.fn();
+    render(
+      <DeckLibrary
+        state={{ status: "ready", decks }}
+        onOpen={vi.fn()}
+        onCreate={vi.fn()}
+        onStudy={onStudy}
+      />,
+    );
+
+    const studyButtons = screen.getAllByRole("button", { name: "Study" });
+    expect(studyButtons[0]).toBeDisabled();
+    fireEvent.click(studyButtons[1]);
+    expect(onStudy).toHaveBeenCalledWith(["two"]);
+  });});

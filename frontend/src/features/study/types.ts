@@ -11,6 +11,30 @@ export interface StudyPrompt {
   answered: boolean;
 }
 
+export interface StudyCardResult {
+  promptId: string;
+  simplified: string;
+  pinyin: string;
+  english: string;
+  answer: string;
+  score: number;
+  evaluatorVerdict: StudyVerdict;
+  finalVerdict: StudyVerdict;
+  overridden: boolean;
+  historicalCorrect: number;
+  historicalAttempts: number;
+  historicalPercent: number;
+}
+
+export interface StudySessionSummary {
+  correctCount: number;
+  mostlyCorrectCount: number;
+  incorrectCount: number;
+  overriddenCount: number;
+  correctPercent: number;
+  averageScore: number;
+  results: StudyCardResult[];
+}
 export interface StudySession {
   id: string;
   status: "active" | "completed";
@@ -22,6 +46,7 @@ export interface StudySession {
   createdAt: string;
   completedAt: string | null;
   currentPrompt: StudyPrompt | null;
+  summary: StudySessionSummary | null;
 }
 
 export interface StudySessionInput {

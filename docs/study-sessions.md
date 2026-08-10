@@ -53,6 +53,17 @@ Scores of at least 90% are `correct`; at least 70% are `mostly_correct`; lower s
 - `POST /api/study/sessions/{session_id}/attempts` evaluates and saves the current answer.
 - `POST /api/study/sessions/{session_id}/advance` advances only after an answer is saved.
 
+## Completion and progress summary
+
+Completing a session returns a persisted summary rather than calculating results only in the browser. The completion screen shows:
+
+- the percentage of final reviewed judgments that were correct;
+- the average automatic similarity score;
+- correct, mostly-correct, incorrect, and learner-override counts;
+- each card's Chinese, pinyin, English, submitted answer, final result, and match score;
+- historical correct attempts, total attempts, and percentage correct for that card.
+
+Historical card accuracy is scoped to the exact prompt and response channels. For example, `characters → english` and `english → characters` accumulate separate histories. Correctness uses the final reviewed verdict, while average match continues to expose the evaluator's original numerical score.
 ## Next learning layers
 
 Attempt history now provides the foundation for per-mode mastery, weak-card prioritization, spaced repetition, richer correction explanations, and audio prompt/response channels. Those features should consume this history rather than altering completed attempts.

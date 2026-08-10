@@ -37,6 +37,32 @@ class StudyPrompt(BaseModel):
     answered: bool
 
 
+class StudyCardResult(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    prompt_id: str = Field(alias="promptId")
+    simplified: str
+    pinyin: str
+    english: str
+    answer: str
+    score: float
+    evaluator_verdict: StudyVerdict = Field(alias="evaluatorVerdict")
+    final_verdict: StudyVerdict = Field(alias="finalVerdict")
+    overridden: bool
+    historical_correct: int = Field(alias="historicalCorrect")
+    historical_attempts: int = Field(alias="historicalAttempts")
+    historical_percent: float = Field(alias="historicalPercent")
+
+
+class StudySessionSummary(BaseModel):
+    model_config = ConfigDict(populate_by_name=True)
+    correct_count: int = Field(alias="correctCount")
+    mostly_correct_count: int = Field(alias="mostlyCorrectCount")
+    incorrect_count: int = Field(alias="incorrectCount")
+    overridden_count: int = Field(alias="overriddenCount")
+    correct_percent: float = Field(alias="correctPercent")
+    average_score: float = Field(alias="averageScore")
+    results: list[StudyCardResult]
+
 class StudySession(BaseModel):
     model_config = ConfigDict(populate_by_name=True)
     id: str
@@ -49,6 +75,7 @@ class StudySession(BaseModel):
     created_at: datetime = Field(alias="createdAt")
     completed_at: datetime | None = Field(alias="completedAt")
     current_prompt: StudyPrompt | None = Field(alias="currentPrompt")
+    summary: StudySessionSummary | None = None
 
 
 class StudyAttemptCreate(BaseModel):

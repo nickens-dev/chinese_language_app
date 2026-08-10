@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 
 import { DeckCards } from "../cards/DeckCards";
-import type { DeckAccent, DeckInput, DeckSummary } from "./types";
+import { deckAccents, type DeckAccent, type DeckInput, type DeckSummary } from "./types";
 
 interface DeckDetailProps {
   deck: DeckSummary;
@@ -78,10 +78,8 @@ export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChang
             <label>
               <span>Card color</span>
               <select value={accent} onChange={(event) => { setAccent(event.target.value as DeckAccent); setSaved(false); }}>
-                <option value="jade">Jade</option>
-                <option value="coral">Coral</option>
-                <option value="gold">Gold</option>
-                <option value="ink">Ink</option>
+                {deckAccents.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+
               </select>
             </label>
             {error && <p className="form-error" role="alert">{error}</p>}

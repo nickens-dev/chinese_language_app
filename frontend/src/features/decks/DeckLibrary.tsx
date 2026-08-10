@@ -97,6 +97,7 @@ export function DeckLibrary({ state, onOpen, onCreate, onStudy }: DeckLibraryPro
             selected={selected.has(deck.id)}
             onToggle={toggleDeck}
             onOpen={onOpen}
+            onStudy={(deckId) => onStudy?.([deckId])}
           />
         ))}
       </div>

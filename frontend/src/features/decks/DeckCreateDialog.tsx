@@ -1,18 +1,11 @@
 import { useState, type FormEvent } from "react";
 
-import type { DeckAccent, DeckInput } from "./types";
+import { deckAccents, type DeckAccent, type DeckInput } from "./types";
 
 interface DeckCreateDialogProps {
   onClose: () => void;
   onCreate: (values: DeckInput) => Promise<void>;
 }
-
-const accents: Array<{ value: DeckAccent; label: string }> = [
-  { value: "jade", label: "Jade" },
-  { value: "coral", label: "Coral" },
-  { value: "gold", label: "Gold" },
-  { value: "ink", label: "Ink" },
-];
 
 export function DeckCreateDialog({ onClose, onCreate }: DeckCreateDialogProps) {
   const [name, setName] = useState("");
@@ -68,7 +61,7 @@ export function DeckCreateDialog({ onClose, onCreate }: DeckCreateDialogProps) {
           <fieldset className="accent-picker">
             <legend>Card color</legend>
             <div>
-              {accents.map((option) => (
+              {deckAccents.map((option) => (
                 <label key={option.value} className={"accent-option accent-" + option.value}>
                   <input
                     type="radio"

@@ -1,0 +1,1 @@
+"""Persistent study-session domain."""

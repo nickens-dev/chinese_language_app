@@ -35,12 +35,12 @@ def test_create_update_and_archive_deck(client: TestClient) -> None:
 
     updated = client.patch(
         f"/api/decks/{deck['id']}",
-        json={"name": "Travel & Transit", "accent": "gold"},
+        json={"name": "Travel & Transit", "accent": "slate"},
     )
 
     assert updated.status_code == 200
     assert updated.json()["name"] == "Travel & Transit"
-    assert updated.json()["accent"] == "gold"
+    assert updated.json()["accent"] == "slate"
 
     archived = client.delete(f"/api/decks/{deck['id']}")
     assert archived.status_code == 204

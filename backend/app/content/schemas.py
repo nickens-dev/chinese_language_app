@@ -3,7 +3,10 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
-DeckAccent = Literal["jade", "coral", "gold", "ink"]
+DeckAccent = Literal[
+    "jade", "coral", "gold", "ink", "sky",
+    "plum", "rose", "tangerine", "moss", "slate",
+]
 
 
 class DeckFields(BaseModel):

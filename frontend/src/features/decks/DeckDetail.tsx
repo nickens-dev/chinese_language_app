@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from "react";
 
 import { DeckCards } from "../cards/DeckCards";
-import type { DeckAccent, DeckInput, DeckSummary } from "./types";
+import { deckAccents, type DeckAccent, type DeckInput, type DeckSummary } from "./types";
 
 interface DeckDetailProps {
   deck: DeckSummary;
@@ -9,9 +9,10 @@ interface DeckDetailProps {
   onUpdate: (deckId: string, values: Partial<DeckInput>) => Promise<void>;
   onArchive: (deckId: string) => Promise<void>;
   onItemCountChange: (deckId: string, count: number) => void;
+  onStudy?: (deckIds: string[]) => void;
 }
 
-export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChange }: DeckDetailProps) {
+export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChange, onStudy }: DeckDetailProps) {
   const [name, setName] = useState(deck.name);
   const [description, setDescription] = useState(deck.description);
   const [accent, setAccent] = useState<DeckAccent>(deck.accent);
@@ -56,7 +57,7 @@ export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChang
           <h1>{deck.name}</h1>
           <p>{deck.itemCount} items • {deck.dueCount} due • {deck.weakCount} weak</p>
         </div>
-        <button className="primary-button" type="button">Study deck</button>
+        <button className="primary-button" type="button" disabled={deck.itemCount === 0} onClick={() => onStudy?.([deck.id])}>Study deck</button>
       </div>
 
       <div className="detail-grid">
@@ -77,10 +78,8 @@ export function DeckDetail({ deck, onBack, onUpdate, onArchive, onItemCountChang
             <label>
               <span>Card color</span>
               <select value={accent} onChange={(event) => { setAccent(event.target.value as DeckAccent); setSaved(false); }}>
-                <option value="jade">Jade</option>
-                <option value="coral">Coral</option>
-                <option value="gold">Gold</option>
-                <option value="ink">Ink</option>
+                {deckAccents.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
+
               </select>
             </label>
             {error && <p className="form-error" role="alert">{error}</p>}

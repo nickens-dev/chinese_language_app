@@ -4,6 +4,7 @@ import { archiveDeck, createDeck, fetchDecks, updateDeck } from "../api/decks";
 import { DeckDetail } from "../features/decks/DeckDetail";
 import { DeckLibrary } from "../features/decks/DeckLibrary";
 import type { DeckInput, DeckSummary } from "../features/decks/types";
+import { ProgressPage } from "../features/progress/ProgressPage";
 import { StudyRunner } from "../features/study/StudyRunner";
 import { StudySetup } from "../features/study/StudySetup";
 import type { StudySession } from "../features/study/types";
@@ -12,7 +13,7 @@ export type LoadState =
   | { status: "loading"; decks: DeckSummary[] }
   | { status: "ready"; decks: DeckSummary[] }
   | { status: "error"; decks: DeckSummary[]; message: string };
-type View = { name: "library" } | { name: "deck"; deckId: string } | { name: "setup"; deckIds: string[] } | { name: "study"; session: StudySession };
+type View = { name: "library" } | { name: "deck"; deckId: string } | { name: "setup"; deckIds: string[] } | { name: "study"; session: StudySession } | { name: "progress" };
 
 export function App() {
   const [loadState, setLoadState] = useState<LoadState>({ status: "loading", decks: [] });
@@ -28,13 +29,14 @@ export function App() {
   const beginSetup = (deckIds: string[]) => setView({ name: "setup", deckIds });
 
   let content;
-  if (view.name === "setup") content = <StudySetup decks={loadState.decks} initialDeckIds={view.deckIds} onBack={goHome} onStart={(session) => setView({ name: "study", session })}/>;
+  if (view.name === "progress") content = <ProgressPage decks={loadState.decks} onStudy={() => beginSetup([])}/>;
+  else if (view.name === "setup") content = <StudySetup decks={loadState.decks} initialDeckIds={view.deckIds} onBack={goHome} onStart={(session) => setView({ name: "study", session })}/>;
   else if (view.name === "study") content = <StudyRunner initialSession={view.session} onExit={goHome}/>;
   else if (selectedDeck) content = <DeckDetail deck={selectedDeck} onBack={goHome} onUpdate={handleUpdate} onArchive={handleArchive} onItemCountChange={handleItemCountChange} onStudy={beginSetup}/>;
   else content = <DeckLibrary state={loadState} onOpen={(deckId) => setView({ name: "deck", deckId })} onCreate={handleCreate} onStudy={beginSetup}/>;
 
   return <div className="app-shell">
-    <aside className="sidebar"><button className="brand brand-button" type="button" onClick={goHome} aria-label="Chinese Study home"><span className="brand-mark" lang="zh-Hans">中文</span><span>Study</span></button><nav aria-label="Main navigation"><a href="#home">Home</a><button className={view.name === "library" || view.name === "deck" ? "active" : ""} type="button" onClick={goHome}>Decks</button><button className={view.name === "setup" || view.name === "study" ? "active" : ""} type="button" onClick={() => beginSetup([])}>Study</button><a href="#progress">Progress</a><a href="#suggestions">Suggestions</a></nav><div className="local-note"><span className="status-dot" aria-hidden="true"/><div><strong>Local mode</strong><small>Data stays on this device</small></div></div></aside>
-    <main id="top"><header className="topbar"><div><span className="eyebrow">{view.name === "study" ? "Focused practice" : view.name === "setup" ? "Session builder" : "Your library"}</span></div><button className="icon-button" type="button" aria-label="Open settings">⚙</button></header>{content}</main>
+    <aside className="sidebar"><button className="brand brand-button" type="button" onClick={goHome} aria-label="Chinese Study home"><span className="brand-mark" lang="zh-Hans">中文</span><span>Study</span></button><nav aria-label="Main navigation"><a href="#home">Home</a><button className={view.name === "library" || view.name === "deck" ? "active" : ""} type="button" onClick={goHome}>Decks</button><button className={view.name === "setup" || view.name === "study" ? "active" : ""} type="button" onClick={() => beginSetup([])}>Study</button><button className={view.name === "progress" ? "active" : ""} type="button" onClick={() => setView({ name: "progress" })}>Progress</button><a href="#suggestions">Suggestions</a></nav><div className="local-note"><span className="status-dot" aria-hidden="true"/><div><strong>Local mode</strong><small>Data stays on this device</small></div></div></aside>
+    <main id="top"><header className="topbar"><div><span className="eyebrow">{view.name === "study" ? "Focused practice" : view.name === "setup" ? "Session builder" : view.name === "progress" ? "Learning history" : "Your library"}</span></div><button className="icon-button" type="button" aria-label="Open settings">⚙</button></header>{content}</main>
   </div>;
 }

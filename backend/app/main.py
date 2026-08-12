@@ -7,12 +7,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.router import api_router
 from app.core.config import settings
 from app.persistence.database import initialize_database
+from app.study.scheduler import backfill_schedule
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI) -> AsyncIterator[None]:
     """Create the local schema before accepting requests."""
     initialize_database()
+    backfill_schedule()
     yield
 
 

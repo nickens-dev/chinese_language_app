@@ -9,6 +9,8 @@ export interface StudyPrompt {
   promptChannel: StudyChannel;
   responseChannel: StudyChannel;
   answered: boolean;
+  selectionReason: string;
+  selectionBucket: string;
 }
 
 export interface StudyCardResult {
@@ -21,6 +23,7 @@ export interface StudyCardResult {
   evaluatorVerdict: StudyVerdict;
   finalVerdict: StudyVerdict;
   overridden: boolean;
+  selectionReason: string;
   historicalCorrect: number;
   historicalAttempts: number;
   historicalPercent: number;
@@ -54,6 +57,9 @@ export interface StudySessionInput {
   requestedCount: number;
   promptChannel: StudyChannel;
   responseChannel: StudyChannel;
+  selectionPolicy?: "balanced" | "due" | "weak" | "new";
+  itemIds?: string[];
+  mixedMode?: boolean;
 }
 
 export interface StudyAttemptResult {

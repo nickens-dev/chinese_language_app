@@ -6,7 +6,7 @@ import { StudyRunner } from "./StudyRunner";
 import type { StudySession } from "./types";
 
 vi.mock("../../api/study");
-const session: StudySession = { id: "session-1", status: "active", requestedCount: 1, actualCount: 1, currentIndex: 0, promptChannel: "characters", responseChannel: "english", createdAt: "2026-08-09T00:00:00Z", completedAt: null, summary: null, currentPrompt: { id: "prompt-1", position: 0, total: 1, promptText: "你好", promptChannel: "characters", responseChannel: "english", answered: false } };
+const session: StudySession = { id: "session-1", status: "active", requestedCount: 1, actualCount: 1, currentIndex: 0, promptChannel: "characters", responseChannel: "english", createdAt: "2026-08-09T00:00:00Z", completedAt: null, summary: null, currentPrompt: { id: "prompt-1", position: 0, total: 1, promptText: "你好", promptChannel: "characters", responseChannel: "english", answered: false, selectionReason: "New in this study direction", selectionBucket: "new" } };
 
 test("requires an answer and reveals feedback before continuing", async () => {
   vi.mocked(studyApi.submitStudyAttempt).mockResolvedValue({ attemptId: "attempt-1", score: 1, verdict: "correct", finalVerdict: "correct", overridden: false, acceptedAnswerAdded: false, expectedAnswers: ["hello"], feedback: "Correct — nicely done.", evaluatorVersion: "typed-v1" });
@@ -67,7 +67,7 @@ test("shows session scores and direction-specific card history on completion", (
       results: [{
         promptId: "prompt-1", simplified: "你好", pinyin: "nǐ hǎo",
         english: "hello", answer: "hello", score: 0.96,
-        evaluatorVerdict: "correct", finalVerdict: "correct", overridden: false,
+        evaluatorVerdict: "correct", finalVerdict: "correct", overridden: false, selectionReason: "Due now",
         historicalCorrect: 3, historicalAttempts: 4, historicalPercent: 75,
       }],
     },

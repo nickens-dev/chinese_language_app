@@ -47,6 +47,9 @@ class CardProgress(BaseModel):
     accuracy_percent: float = Field(alias="accuracyPercent")
     average_score: float = Field(alias="averageScore")
     last_studied_at: datetime = Field(alias="lastStudiedAt")
+    due_at: datetime | None = Field(alias="dueAt")
+    is_due: bool = Field(alias="isDue")
+    weak_reason: str | None = Field(alias="weakReason")
 
 
 class RecentSession(BaseModel):

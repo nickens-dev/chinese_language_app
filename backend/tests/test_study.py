@@ -63,6 +63,42 @@ def test_session_validates_modes_and_available_content(client: TestClient) -> No
     assert empty.status_code == 409
     assert invalid.status_code == 422
 
+
+def test_new_due_and_mixed_mode_selection(client: TestClient) -> None:
+    deck = create_deck(client)
+    add_card(client, deck["id"], "你", "nǐ", "you")
+    base = {
+        "deckIds": [deck["id"]], "requestedCount": 4,
+        "promptChannel": "characters", "responseChannel": "english",
+    }
+    assert client.post(
+        "/api/study/sessions", json={**base, "selectionPolicy": "due"}
+    ).status_code == 409
+
+    response = client.post(
+        "/api/study/sessions",
+        json={**base, "selectionPolicy": "new", "mixedMode": True},
+    )
+    assert response.status_code == 201
+    session = response.json()
+    assert session["actualCount"] == 4
+    directions = []
+    while session["status"] == "active":
+        prompt = session["currentPrompt"]
+        directions.append((prompt["promptChannel"], prompt["responseChannel"]))
+        answer = "nǐ" if prompt["responseChannel"] == "pinyin" else (
+            "你" if prompt["responseChannel"] == "characters" else "you"
+        )
+        result = client.post(
+            f"/api/study/sessions/{session['id']}/attempts", json={"answer": answer}
+        )
+        assert result.status_code == 201
+        session = client.post(f"/api/study/sessions/{session['id']}/advance").json()
+    assert directions == [
+        ("characters", "english"), ("english", "characters"),
+        ("characters", "pinyin"), ("pinyin", "english"),
+    ]
+
 def test_learner_can_override_and_save_an_accepted_answer(client: TestClient) -> None:
     deck = create_deck(client)
     add_card(client, deck["id"], "你", "nǐ", "you (informal)")

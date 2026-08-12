@@ -5,6 +5,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 StudyChannel = Literal["characters", "english", "pinyin"]
 StudyVerdict = Literal["correct", "mostly_correct", "incorrect"]
+SelectionPolicy = Literal["balanced", "due", "weak", "new"]
 
 
 class StudySessionCreate(BaseModel):
@@ -13,6 +14,9 @@ class StudySessionCreate(BaseModel):
     requested_count: int = Field(alias="requestedCount", gt=0, le=500)
     prompt_channel: StudyChannel = Field(alias="promptChannel")
     response_channel: StudyChannel = Field(alias="responseChannel")
+    selection_policy: SelectionPolicy = Field(default="balanced", alias="selectionPolicy")
+    item_ids: list[str] | None = Field(default=None, alias="itemIds")
+    mixed_mode: bool = Field(default=False, alias="mixedMode")
 
     @model_validator(mode="after")
     def validate_mode(self) -> "StudySessionCreate":
@@ -35,6 +39,8 @@ class StudyPrompt(BaseModel):
     prompt_channel: StudyChannel = Field(alias="promptChannel")
     response_channel: StudyChannel = Field(alias="responseChannel")
     answered: bool
+    selection_reason: str = Field(alias="selectionReason")
+    selection_bucket: str = Field(alias="selectionBucket")
 
 
 class StudyCardResult(BaseModel):
@@ -48,6 +54,7 @@ class StudyCardResult(BaseModel):
     evaluator_verdict: StudyVerdict = Field(alias="evaluatorVerdict")
     final_verdict: StudyVerdict = Field(alias="finalVerdict")
     overridden: bool
+    selection_reason: str = Field(alias="selectionReason")
     historical_correct: int = Field(alias="historicalCorrect")
     historical_attempts: int = Field(alias="historicalAttempts")
     historical_percent: float = Field(alias="historicalPercent")

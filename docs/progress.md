@@ -24,6 +24,8 @@ Active elapsed time is intentionally excluded because creation and completion ti
 
 The overview is followed by an accuracy line with attempt-volume bars, a study-direction comparison, weakest-first card-direction records, and the ten most recent matching completed sessions. Word records remain separated by prompt and response channels.
 
+Each word record also identifies whether that exact study direction is due and explains why it qualifies as weak. After choosing a direction, **Study weak cards** creates a session from matching weak records. See [Review scheduling and mastery](scheduling.md) for the rules.
+
 ## API
 
 `GET /api/progress` accepts `days`, `deckId`, `promptChannel`, and `responseChannel`, and `timezoneOffset`. Aggregates are calculated from attempts at request time and returned as one consistent report.

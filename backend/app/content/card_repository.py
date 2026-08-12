@@ -4,6 +4,7 @@ from uuid import uuid4
 
 from app.content.schemas import Card, CardCreate, CardUpdate
 from app.persistence.database import connect
+from app.study.scheduler import sync_deck_schedule_counts
 
 
 class CardNotFoundError(LookupError):
@@ -117,6 +118,7 @@ def create_card(deck_id: str, values: CardCreate) -> Card:
             (deck_id, card_id, position, now),
         )
         _sync_deck_count(connection, deck_id, now)
+        sync_deck_schedule_counts(connection)
         connection.commit()
         return _get_active_card(connection, card_id)
 
@@ -158,4 +160,5 @@ def remove_card_from_deck(deck_id: str, card_id: str) -> None:
                 (now, now, card_id),
             )
         _sync_deck_count(connection, deck_id, now)
+        sync_deck_schedule_counts(connection)
         connection.commit()

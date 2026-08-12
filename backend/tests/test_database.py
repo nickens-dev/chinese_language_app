@@ -54,6 +54,41 @@ def test_initialization_adds_traditional_form_to_early_card_table(
     connection.close()
     assert {"traditional", "source_name", "source_entry_id"} <= columns
 
+
+def test_initialization_repairs_null_final_verdicts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    path = tmp_path / "nullable-final-verdict.db"
+    connection = open_connection(path)
+    connection.execute(
+        """CREATE TABLE study_attempts (
+            id TEXT PRIMARY KEY, prompt_id TEXT NOT NULL UNIQUE,
+            raw_answer TEXT NOT NULL, normalized_answer TEXT NOT NULL,
+            score REAL NOT NULL, verdict TEXT NOT NULL, final_verdict TEXT,
+            feedback TEXT NOT NULL, evaluator_version TEXT NOT NULL,
+            created_at TEXT NOT NULL
+        )"""
+    )
+    connection.execute(
+        """INSERT INTO study_attempts (
+            id, prompt_id, raw_answer, normalized_answer, score, verdict,
+            final_verdict, feedback, evaluator_version, created_at
+        ) VALUES ('attempt-1', 'prompt-1', 'dragon', 'dragon', 1, 'correct',
+                  NULL, 'Correct.', 'typed-v1', '2026-08-01T00:00:00+00:00')"""
+    )
+    connection.commit()
+    connection.close()
+    monkeypatch.setattr(database, "settings", Settings(database_path=path))
+
+    database.initialize_database()
+
+    connection = open_connection(path)
+    verdict = connection.execute(
+        "SELECT final_verdict FROM study_attempts WHERE id = 'attempt-1'"
+    ).fetchone()[0]
+    connection.close()
+    assert verdict == "correct"
+
 def test_initialization_migrates_early_deck_accent_constraint(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:

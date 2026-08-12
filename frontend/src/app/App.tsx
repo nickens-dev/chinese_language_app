@@ -29,7 +29,7 @@ export function App() {
   const beginSetup = (deckIds: string[]) => setView({ name: "setup", deckIds });
 
   let content;
-  if (view.name === "progress") content = <ProgressPage decks={loadState.decks} onStudy={() => beginSetup([])}/>;
+  if (view.name === "progress") content = <ProgressPage decks={loadState.decks} onStudy={() => beginSetup([])} onStart={(session) => setView({ name: "study", session })}/>;
   else if (view.name === "setup") content = <StudySetup decks={loadState.decks} initialDeckIds={view.deckIds} onBack={goHome} onStart={(session) => setView({ name: "study", session })}/>;
   else if (view.name === "study") content = <StudyRunner initialSession={view.session} onExit={goHome}/>;
   else if (selectedDeck) content = <DeckDetail deck={selectedDeck} onBack={goHome} onUpdate={handleUpdate} onArchive={handleArchive} onItemCountChange={handleItemCountChange} onStudy={beginSetup}/>;

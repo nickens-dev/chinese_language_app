@@ -1,4 +1,4 @@
-# Chinese Language Study App
+# Yuya Chinese Language Study App
 
 A local-first, mobile-ready Chinese study application built around flexible language decks, configurable study sessions, and evidence-based mastery tracking.
 

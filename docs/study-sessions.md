@@ -12,15 +12,17 @@ The first study implementation is a persistent, typed-response learning loop. It
    - English text → Chinese characters
    - Chinese characters → pinyin
    - Pinyin → English text
-5. Type a non-blank answer and select **Check answer**.
-6. Review the verdict, similarity score, expected answer, and feedback.
-7. Select **Continue**. The final card completes the session and updates each selected deck's last-studied time.
+   Or enable **Mixed mode** to rotate through all four supported directions in one session.
+5. Choose balanced, due-only, weak-only, or new-only selection.
+6. Type a non-blank answer and select **Check answer**.
+7. Review the verdict, similarity score, expected answer, and feedback.
+8. Select **Continue**. The final card completes the session and updates each selected deck's last-studied time.
 
 ## Persistence model
 
 - `study_sessions` stores configuration, progress, status, and timestamps.
 - `study_session_decks` records the decks included in a session.
-- `study_prompts` stores an ordered snapshot of each card. Editing a card later cannot change an existing session.
+- `study_prompts` stores an ordered snapshot of each card, its study direction, and why it was selected. Editing a card later cannot change an existing session.
 - `study_attempts` stores the raw and normalized response, score, verdict, feedback, evaluator version, and timestamp.
 
 Only one attempt is accepted for each prompt in this version. Expected answers are not returned until the learner submits an answer.
@@ -36,7 +38,7 @@ The original evaluator verdict, score, and evaluator version remain unchanged. T
 
 ## Selection and evaluation
 
-Selection policy `deck-order-v1` is deterministic. It follows deck membership order, deduplicates cards shared by selected decks, and takes up to the requested count. The stored policy name makes future mastery-based selection auditable.
+Balanced selection prioritizes overdue weak, due, weak, new, and finally early-fill card-directions. Due-only, weak-only, and new-only policies restrict the eligible pool. Mixed mode builds a rotating sequence from all supported directions; the same word may appear more than once when it tests a different skill. Every prompt stores its direction and readable selection reason so scheduling remains auditable. See [Review scheduling and mastery](scheduling.md).
 
 Evaluator `typed-v1` applies format-specific normalization:
 

@@ -73,6 +73,10 @@ CREATE TABLE IF NOT EXISTS study_prompts (
     traditional TEXT NOT NULL,
     pinyin TEXT NOT NULL,
     english TEXT NOT NULL,
+    prompt_channel TEXT NOT NULL DEFAULT 'characters',
+    response_channel TEXT NOT NULL DEFAULT 'english',
+    selection_reason TEXT NOT NULL DEFAULT 'Deck order',
+    selection_bucket TEXT NOT NULL DEFAULT 'new',
     UNIQUE (session_id, position)
 );
 CREATE TABLE IF NOT EXISTS study_attempts (
@@ -92,6 +96,35 @@ CREATE TABLE IF NOT EXISTS study_attempts (
 CREATE INDEX IF NOT EXISTS study_prompts_session_position
 ON study_prompts(session_id, position);
 
+CREATE TABLE IF NOT EXISTS review_events (
+    attempt_id TEXT PRIMARY KEY REFERENCES study_attempts(id),
+    item_id TEXT NOT NULL REFERENCES language_items(id),
+    prompt_channel TEXT NOT NULL,
+    response_channel TEXT NOT NULL,
+    rating TEXT NOT NULL CHECK (rating IN ('again', 'hard', 'good', 'easy')),
+    reviewed_at TEXT NOT NULL,
+    scheduler_version TEXT NOT NULL DEFAULT 'transparent-v1'
+);
+CREATE INDEX IF NOT EXISTS review_events_skill
+ON review_events(item_id, prompt_channel, response_channel, reviewed_at);
+
+CREATE TABLE IF NOT EXISTS card_skill_states (
+    item_id TEXT NOT NULL REFERENCES language_items(id),
+    prompt_channel TEXT NOT NULL,
+    response_channel TEXT NOT NULL,
+    learning_state TEXT NOT NULL CHECK (learning_state IN ('learning', 'review', 'relearning')),
+    due_at TEXT NOT NULL,
+    last_reviewed_at TEXT NOT NULL,
+    interval_days REAL NOT NULL DEFAULT 0,
+    stability REAL NOT NULL DEFAULT 0.5,
+    difficulty REAL NOT NULL DEFAULT 5,
+    review_count INTEGER NOT NULL DEFAULT 0,
+    lapse_count INTEGER NOT NULL DEFAULT 0,
+    scheduler_version TEXT NOT NULL DEFAULT 'transparent-v1',
+    PRIMARY KEY (item_id, prompt_channel, response_channel)
+);
+CREATE INDEX IF NOT EXISTS card_skill_states_due
+ON card_skill_states(due_at);
 CREATE TABLE IF NOT EXISTS accepted_answers (
     id TEXT PRIMARY KEY,
     item_id TEXT NOT NULL REFERENCES language_items(id),
@@ -173,10 +206,34 @@ def initialize_database() -> None:
         }
         if "final_verdict" not in attempt_columns:
             connection.execute("ALTER TABLE study_attempts ADD COLUMN final_verdict TEXT")
-            connection.execute(
-                "UPDATE study_attempts SET final_verdict = verdict WHERE final_verdict IS NULL"
-            )
+        connection.execute(
+            "UPDATE study_attempts SET final_verdict = verdict WHERE final_verdict IS NULL"
+        )
         if "override_reason" not in attempt_columns:
             connection.execute("ALTER TABLE study_attempts ADD COLUMN override_reason TEXT")
         if "overridden_at" not in attempt_columns:
             connection.execute("ALTER TABLE study_attempts ADD COLUMN overridden_at TEXT")
+        prompt_columns = {
+            row["name"] for row in connection.execute("PRAGMA table_info(study_prompts)")
+        }
+        if "selection_reason" not in prompt_columns:
+            connection.execute("ALTER TABLE study_prompts ADD COLUMN selection_reason TEXT NOT NULL DEFAULT 'Deck order' ")
+        if "selection_bucket" not in prompt_columns:
+            connection.execute("ALTER TABLE study_prompts ADD COLUMN selection_bucket TEXT NOT NULL DEFAULT 'new'")
+        if "prompt_channel" not in prompt_columns:
+            connection.execute("ALTER TABLE study_prompts ADD COLUMN prompt_channel TEXT NOT NULL DEFAULT 'characters'")
+            connection.execute(
+                """UPDATE study_prompts SET prompt_channel = (
+                    SELECT prompt_channel FROM study_sessions
+                    WHERE study_sessions.id = study_prompts.session_id
+                )"""
+            )
+        if "response_channel" not in prompt_columns:
+            connection.execute("ALTER TABLE study_prompts ADD COLUMN response_channel TEXT NOT NULL DEFAULT 'english'")
+            connection.execute(
+                """UPDATE study_prompts SET response_channel = (
+                    SELECT response_channel FROM study_sessions
+                    WHERE study_sessions.id = study_prompts.session_id
+                )"""
+            )
+        connection.commit()

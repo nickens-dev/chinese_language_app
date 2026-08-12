@@ -12,6 +12,7 @@ from app.progress.schemas import (
     ProgressTrendPoint,
     RecentSession,
 )
+from app.study.scheduler import weak_reason
 
 
 def _percent(correct: int, attempts: int) -> float:
@@ -57,10 +58,10 @@ def get_progress(
         )
         parameters.append(deck_id)
     if prompt_channel:
-        conditions.append("sessions.prompt_channel = ?")
+        conditions.append("prompts.prompt_channel = ?")
         parameters.append(prompt_channel)
     if response_channel:
-        conditions.append("sessions.response_channel = ?")
+        conditions.append("prompts.response_channel = ?")
         parameters.append(response_channel)
     where = "WHERE " + " AND ".join(conditions) if conditions else ""
 
@@ -71,7 +72,7 @@ def get_progress(
             attempts.created_at AS attempt_created_at,
             prompts.item_id, prompts.simplified, prompts.pinyin, prompts.english,
             sessions.id AS session_id, sessions.status,
-            sessions.prompt_channel, sessions.response_channel,
+            prompts.prompt_channel, prompts.response_channel,
             sessions.completed_at
             FROM study_attempts AS attempts
             JOIN study_prompts AS prompts ON prompts.id = attempts.prompt_id
@@ -142,6 +143,13 @@ def get_progress(
         cards = []
         for (item_id, prompt, response), group in card_groups.items():
             latest = group[-1]
+            state = connection.execute(
+                """SELECT due_at FROM card_skill_states WHERE item_id = ?
+                AND prompt_channel = ? AND response_channel = ?""",
+                (item_id, prompt, response),
+            ).fetchone()
+            due_at = state["due_at"] if state else None
+            reason = weak_reason(connection, item_id, prompt, response)
             cards.append(
                 CardProgress(
                     itemId=item_id, simplified=latest["simplified"],
@@ -156,6 +164,8 @@ def get_progress(
                         sum(row["score"] for row in group) / len(group) * 100, 1
                     ),
                     lastStudiedAt=latest["attempt_created_at"],
+                    dueAt=due_at, isDue=bool(due_at and due_at <= datetime.now(UTC).isoformat()),
+                    weakReason=reason,
                 )
             )
         cards.sort(key=lambda card: (card.accuracy_percent, -card.attempts, card.simplified))

@@ -19,6 +19,7 @@ The project has executable local deck, card management, dictionary-assisted entr
 - [Dictionary-assisted entry](docs/dictionary-assistance.md)
 - [Study sessions](docs/study-sessions.md)
 - [Progress dashboard](docs/progress.md)
+- [Review scheduling and mastery](docs/scheduling.md)
 
 ## Repository structure
 
